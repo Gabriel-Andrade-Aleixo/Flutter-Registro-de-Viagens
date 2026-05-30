@@ -1,7 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import './screens/lista.dart';
 
-void main() => runApp(const TravelApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  _configurarSqliteDesktop();
+  runApp(const TravelApp());
+}
+
+void _configurarSqliteDesktop() {
+  if (kIsWeb) {
+    return;
+  }
+
+  final isDesktop =
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.linux ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+
+  if (isDesktop) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+}
 
 class TravelApp extends StatelessWidget {
   const TravelApp({super.key});

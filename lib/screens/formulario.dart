@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../components/editor.dart';
-import '../../models/viagem.dart';
+import '../components/editor.dart';
+import '../models/viagem.dart';
 
 class FormularioViagem extends StatefulWidget {
-  const FormularioViagem({super.key});
+  final Viagem? viagem;
+
+  const FormularioViagem({super.key, this.viagem});
 
   @override
   State<FormularioViagem> createState() => _FormularioViagemState();
 }
 
 class _FormularioViagemState extends State<FormularioViagem> {
-  static const _tituloAppBar = 'Criando Viagem';
   static const _rotuloDestino = 'Destino';
   static const _dicaDestino = 'Ex.: Rio de Janeiro';
   static const _rotuloValor = 'Valor';
@@ -28,6 +29,14 @@ class _FormularioViagemState extends State<FormularioViagem> {
   @override
   void initState() {
     super.initState();
+
+    final viagem = widget.viagem;
+    if (viagem != null) {
+      _controladorDestino.text = viagem.destino;
+      _controladorValor.text = viagem.valor.toStringAsFixed(2);
+      _dataSelecionada = viagem.data;
+    }
+
     _controladorData.text = _formatarData(_dataSelecionada);
   }
 
@@ -42,7 +51,11 @@ class _FormularioViagemState extends State<FormularioViagem> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(_tituloAppBar)),
+      appBar: AppBar(
+        title: Text(
+          widget.viagem == null ? 'Criando Viagem' : 'Editando Viagem',
+        ),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
@@ -110,7 +123,12 @@ class _FormularioViagemState extends State<FormularioViagem> {
       return;
     }
 
-    final viagemCriada = Viagem(destino, _dataSelecionada, valor);
+    final viagemCriada = Viagem(
+      id: widget.viagem?.id,
+      destino: destino,
+      data: _dataSelecionada,
+      valor: valor,
+    );
     Navigator.pop(context, viagemCriada);
   }
 
