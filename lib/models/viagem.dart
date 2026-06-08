@@ -1,10 +1,47 @@
+enum SyncStatus {
+  pendente('pendente'),
+  sincronizado('sincronizado'),
+  erro('erro');
+
+  const SyncStatus(this.valor);
+
+  final String valor;
+
+  static SyncStatus fromString(String? valor) {
+    return SyncStatus.values.firstWhere(
+      (status) => status.valor == valor,
+      orElse: () => SyncStatus.pendente,
+    );
+  }
+}
+
+enum SyncAction {
+  nenhuma('nenhuma'),
+  criar('criar'),
+  atualizar('atualizar'),
+  deletar('deletar');
+
+  const SyncAction(this.valor);
+
+  final String valor;
+
+  static SyncAction fromString(String? valor) {
+    return SyncAction.values.firstWhere(
+      (action) => action.valor == valor,
+      orElse: () => SyncAction.nenhuma,
+    );
+  }
+}
+
 class Viagem {
   final int? id;
   final int? remoteId;
   final String destino;
   final DateTime data;
   final double valor;
-  final bool sincronizado;
+  final SyncStatus syncStatus;
+  final SyncAction syncAction;
+  final bool removido;
 
   const Viagem({
     this.id,
@@ -12,8 +49,19 @@ class Viagem {
     required this.destino,
     required this.data,
     required this.valor,
-    this.sincronizado = false,
+    this.syncStatus = SyncStatus.pendente,
+    this.syncAction = SyncAction.criar,
+    this.removido = false,
   });
+
+  bool get sincronizado =>
+      syncStatus == SyncStatus.sincronizado &&
+      syncAction == SyncAction.nenhuma &&
+      !removido;
+
+  bool get comErro => syncStatus == SyncStatus.erro;
+
+  bool get pendenteSincronizacao => !sincronizado;
 
   Viagem copyWith({
     int? id,
@@ -21,6 +69,9 @@ class Viagem {
     String? destino,
     DateTime? data,
     double? valor,
+    SyncStatus? syncStatus,
+    SyncAction? syncAction,
+    bool? removido,
     bool? sincronizado,
   }) {
     return Viagem(
@@ -29,7 +80,15 @@ class Viagem {
       destino: destino ?? this.destino,
       data: data ?? this.data,
       valor: valor ?? this.valor,
-      sincronizado: sincronizado ?? this.sincronizado,
+      syncStatus: sincronizado == null
+          ? syncStatus ?? this.syncStatus
+          : sincronizado
+          ? SyncStatus.sincronizado
+          : SyncStatus.pendente,
+      syncAction: sincronizado == true
+          ? SyncAction.nenhuma
+          : syncAction ?? this.syncAction,
+      removido: removido ?? this.removido,
     );
   }
 
@@ -41,17 +100,29 @@ class Viagem {
       'data': data.toIso8601String(),
       'valor': valor,
       'sincronizado': sincronizado ? 1 : 0,
+      'sync_status': syncStatus.valor,
+      'sync_action': syncAction.valor,
+      'removido': removido ? 1 : 0,
     };
   }
 
   factory Viagem.fromMap(Map<String, Object?> map) {
+    final legadoSincronizado = (map['sincronizado'] as int? ?? 0) == 1;
+    final syncStatus = map['sync_status'] == null
+        ? legadoSincronizado
+              ? SyncStatus.sincronizado
+              : SyncStatus.pendente
+        : SyncStatus.fromString(map['sync_status'] as String?);
+
     return Viagem(
       id: map['id'] as int?,
       remoteId: map['remote_id'] as int?,
       destino: map['destino'] as String,
       data: DateTime.parse(map['data'] as String),
       valor: (map['valor'] as num).toDouble(),
-      sincronizado: (map['sincronizado'] as int? ?? 0) == 1,
+      syncStatus: syncStatus,
+      syncAction: SyncAction.fromString(map['sync_action'] as String?),
+      removido: (map['removido'] as int? ?? 0) == 1,
     );
   }
 
@@ -66,13 +137,14 @@ class Viagem {
       destino: json['destino'] as String,
       data: DateTime.parse(json['data'] as String),
       valor: (json['valor'] as num).toDouble(),
-      sincronizado: true,
+      syncStatus: SyncStatus.sincronizado,
+      syncAction: SyncAction.nenhuma,
     );
   }
 
   @override
   String toString() {
-    return 'Viagem{id: $id, remoteId: $remoteId, destino: $destino, data: $data, valor: $valor, sincronizado: $sincronizado}';
+    return 'Viagem{id: $id, remoteId: $remoteId, destino: $destino, data: $data, valor: $valor, syncStatus: $syncStatus, syncAction: $syncAction, removido: $removido}';
   }
 
   String get dataFormatada {

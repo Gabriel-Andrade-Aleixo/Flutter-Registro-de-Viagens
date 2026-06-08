@@ -18,7 +18,6 @@ class _FormularioViagemState extends State<FormularioViagem> {
   static const _dicaValor = '0.00';
   static const _rotuloData = 'Data da viagem';
   static const _dicaData = 'Selecione a data';
-  static const _textBotaoConfirmar = 'Confirmar';
 
   final TextEditingController _controladorDestino = TextEditingController();
   final TextEditingController _controladorValor = TextEditingController();
@@ -56,37 +55,104 @@ class _FormularioViagemState extends State<FormularioViagem> {
           widget.viagem == null ? 'Criando Viagem' : 'Editando Viagem',
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            Editor(
-              controlador: _controladorDestino,
-              rotulo: _rotuloDestino,
-              dica: _dicaDestino,
-              icone: Icons.place,
-              teclado: TextInputType.text,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F3D6E),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.edit_location_alt_outlined,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.viagem == null
+                              ? 'Novo destino'
+                              : 'Atualizar destino',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Preencha as informacoes da viagem',
+                          style: TextStyle(color: Color(0xFFD8F4F1)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Editor(
-              controlador: _controladorData,
-              rotulo: _rotuloData,
-              dica: _dicaData,
-              icone: Icons.calendar_today,
-              teclado: TextInputType.none,
-              readOnly: true,
-              onTap: _selecionarData,
+            const SizedBox(height: 18),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Editor(
+                      controlador: _controladorDestino,
+                      rotulo: _rotuloDestino,
+                      dica: _dicaDestino,
+                      icone: Icons.place_outlined,
+                      teclado: TextInputType.text,
+                    ),
+                    const SizedBox(height: 14),
+                    Editor(
+                      controlador: _controladorData,
+                      rotulo: _rotuloData,
+                      dica: _dicaData,
+                      icone: Icons.calendar_today,
+                      teclado: TextInputType.none,
+                      readOnly: true,
+                      onTap: _selecionarData,
+                    ),
+                    const SizedBox(height: 14),
+                    Editor(
+                      controlador: _controladorValor,
+                      rotulo: _rotuloValor,
+                      dica: _dicaValor,
+                      icone: Icons.payments_outlined,
+                      teclado: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            Editor(
-              controlador: _controladorValor,
-              rotulo: _rotuloValor,
-              dica: _dicaValor,
-              icone: Icons.attach_money,
-              teclado: TextInputType.number,
-            ),
-            ElevatedButton(
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
               onPressed: () {
                 _criarViagem(context);
               },
-              child: const Text(_textBotaoConfirmar),
+              icon: const Icon(Icons.check_circle_outline),
+              label: Text(
+                widget.viagem == null
+                    ? 'Cadastrar viagem'
+                    : 'Salvar alteracoes',
+              ),
             ),
           ],
         ),
@@ -125,9 +191,13 @@ class _FormularioViagemState extends State<FormularioViagem> {
 
     final viagemCriada = Viagem(
       id: widget.viagem?.id,
+      remoteId: widget.viagem?.remoteId,
       destino: destino,
       data: _dataSelecionada,
       valor: valor,
+      syncStatus: widget.viagem?.syncStatus ?? SyncStatus.pendente,
+      syncAction: widget.viagem?.syncAction ?? SyncAction.criar,
+      removido: widget.viagem?.removido ?? false,
     );
     Navigator.pop(context, viagemCriada);
   }

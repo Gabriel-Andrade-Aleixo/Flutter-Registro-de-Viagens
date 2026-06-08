@@ -22,20 +22,18 @@ class Editor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: controlador,
-        readOnly: readOnly,
-        onTap: onTap,
-        style: const TextStyle(fontSize: 18),
-        decoration: InputDecoration(
-          icon: icone != null ? Icon(icone) : null,
-          labelText: rotulo,
-          hintText: dica,
-        ),
-        keyboardType: teclado,
+    return TextField(
+      controller: controlador,
+      readOnly: readOnly,
+      onTap: onTap,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(
+        prefixIcon: icone != null ? Icon(icone) : null,
+        labelText: rotulo,
+        hintText: dica,
+        suffixIcon: readOnly ? const Icon(Icons.expand_more) : null,
       ),
+      keyboardType: teclado,
     );
   }
 }

@@ -9,7 +9,7 @@ class DatabaseHelper {
 
   static final DatabaseHelper instance = DatabaseHelper._();
   static const _databaseName = 'registro_viagens.db';
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
 
   Database? _database;
   bool _factoryConfigurada = false;
@@ -44,7 +44,10 @@ class DatabaseHelper {
         destino TEXT NOT NULL,
         data TEXT NOT NULL,
         valor REAL NOT NULL,
-        sincronizado INTEGER NOT NULL DEFAULT 0
+        sincronizado INTEGER NOT NULL DEFAULT 0,
+        sync_status TEXT NOT NULL DEFAULT 'pendente',
+        sync_action TEXT NOT NULL DEFAULT 'criar',
+        removido INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }
@@ -60,6 +63,30 @@ class DatabaseHelper {
       await db.execute(
         'ALTER TABLE viagens ADD COLUMN sincronizado INTEGER NOT NULL DEFAULT 0',
       );
+    }
+
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE viagens ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'pendente'",
+      );
+      await db.execute(
+        "ALTER TABLE viagens ADD COLUMN sync_action TEXT NOT NULL DEFAULT 'criar'",
+      );
+      await db.execute(
+        'ALTER TABLE viagens ADD COLUMN removido INTEGER NOT NULL DEFAULT 0',
+      );
+      await db.execute('''
+        UPDATE viagens
+        SET sync_status = CASE
+          WHEN sincronizado = 1 THEN 'sincronizado'
+          ELSE 'pendente'
+        END,
+        sync_action = CASE
+          WHEN sincronizado = 1 THEN 'nenhuma'
+          WHEN remote_id IS NULL THEN 'criar'
+          ELSE 'atualizar'
+        END
+      ''');
     }
   }
 

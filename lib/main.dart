@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import './screens/lista.dart';
+import './screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,37 +32,69 @@ class TravelApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const ListaViagens(),
+      home: const SplashScreen(),
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        primaryColor: Colors.blue.shade900,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue.shade900,
+        scaffoldBackgroundColor: const Color(0xFFF4F7FA),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0F6B7A),
+          brightness: Brightness.light,
+          primary: const Color(0xFF0F3D6E),
+          secondary: const Color(0xFF0F9F9A),
+          tertiary: const Color(0xFFE85D4F),
+        ),
+        primaryColor: const Color(0xFF0F3D6E),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF0F3D6E),
           foregroundColor: Colors.white,
-          titleTextStyle: const TextStyle(
+          elevation: 0,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Color(0xFFE0E7EF)),
+          ),
+        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade700,
+            backgroundColor: const Color(0xFF0F3D6E),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            minimumSize: const Size.fromHeight(52),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             textStyle: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          backgroundColor: Colors.blue.shade700,
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFFE85D4F),
           foregroundColor: Colors.white,
         ),
-        inputDecorationTheme: const InputDecorationTheme(
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
           border: OutlineInputBorder(),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFD7E0EA)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF0F9F9A), width: 2),
+          ),
         ),
       ),
     );

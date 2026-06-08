@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/viagem.dart';
@@ -8,17 +9,29 @@ import 'app_logger.dart';
 class ViagemApiService {
   ViagemApiService({http.Client? client, String? baseUrl})
     : _client = client ?? http.Client(),
-      _baseUrl = baseUrl ?? _defaultBaseUrl {
+      _baseUrl = baseUrl ?? _resolverBaseUrl() {
     AppLogger.info('API-HTTP', 'Base URL configurada: $_baseUrl');
   }
 
-  static const _defaultBaseUrl = String.fromEnvironment(
+  static const _apiBaseUrlDefinida = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:3000',
+    defaultValue: '',
   );
 
   final http.Client _client;
   final String _baseUrl;
+
+  static String _resolverBaseUrl() {
+    if (_apiBaseUrlDefinida.isNotEmpty) {
+      return _apiBaseUrlDefinida;
+    }
+
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:3000';
+    }
+
+    return 'http://localhost:3000';
+  }
 
   Uri _uri([String path = '']) => Uri.parse('$_baseUrl/viagens$path');
 

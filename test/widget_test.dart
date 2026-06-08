@@ -20,7 +20,10 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const TravelApp());
-    await tester.pump();
+    expect(find.text('Organizando seus destinos'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 1300));
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Registro de Viagens'), findsOneWidget);
   });

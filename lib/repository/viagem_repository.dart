@@ -47,11 +47,16 @@ class ViagemRepository {
     };
   }
 
-  Future<void> deletar(int id) {
-    AppLogger.info('REPOSITORY', 'Deletando viagem pela fonte=$fonte id=$id');
+  Future<void> deletar(Viagem viagem) {
+    final idRemoto = viagem.remoteId ?? viagem.id;
+    AppLogger.info(
+      'REPOSITORY',
+      'Deletando viagem pela fonte=$fonte id=${viagem.id}, remoteId=${viagem.remoteId}',
+    );
     return switch (fonte) {
-      FontePersistencia.local => _localDataSource.deletar(id),
-      FontePersistencia.remota => _apiService.deletar(id),
+      FontePersistencia.local => _localDataSource.deletar(viagem),
+      FontePersistencia.remota =>
+        idRemoto == null ? Future.value() : _apiService.deletar(idRemoto),
     };
   }
 
@@ -63,21 +68,55 @@ class ViagemRepository {
     for (final viagem in pendentes) {
       AppLogger.info(
         'REPOSITORY',
-        'Sincronizando localId=${viagem.id}, remoteId=${viagem.remoteId}',
+        'Sincronizando localId=${viagem.id}, remoteId=${viagem.remoteId}, action=${viagem.syncAction}',
       );
-      final viagemRemota = viagem.remoteId == null
-          ? await _apiService.cadastrar(viagem)
-          : await _apiService.atualizar(viagem);
-
       final idLocal = viagem.id;
-      final idRemoto = viagemRemota.id;
+      if (idLocal == null) {
+        continue;
+      }
 
-      if (idLocal != null && idRemoto != null) {
-        await _localDataSource.marcarComoSincronizada(
-          id: idLocal,
-          remoteId: idRemoto,
+      try {
+        switch (viagem.syncAction) {
+          case SyncAction.criar:
+            final viagemRemota = await _apiService.cadastrar(viagem);
+            final idRemoto = viagemRemota.id;
+            if (idRemoto != null) {
+              await _localDataSource.marcarComoSincronizada(
+                id: idLocal,
+                remoteId: idRemoto,
+              );
+              totalSincronizado++;
+            }
+          case SyncAction.atualizar:
+            final viagemRemota = await _apiService.atualizar(viagem);
+            final idRemoto = viagemRemota.id ?? viagem.remoteId;
+            if (idRemoto != null) {
+              await _localDataSource.marcarComoSincronizada(
+                id: idLocal,
+                remoteId: idRemoto,
+              );
+              totalSincronizado++;
+            }
+          case SyncAction.deletar:
+            final idRemoto = viagem.remoteId;
+            if (idRemoto != null) {
+              await _apiService.deletar(idRemoto);
+            }
+            await _localDataSource.removerDefinitivamente(idLocal);
+            totalSincronizado++;
+          case SyncAction.nenhuma:
+            await _localDataSource.marcarComoSincronizada(
+              id: idLocal,
+              remoteId: viagem.remoteId ?? idLocal,
+            );
+        }
+      } catch (erro) {
+        AppLogger.error(
+          'REPOSITORY',
+          'Falha ao sincronizar viagem localId=$idLocal',
+          erro,
         );
-        totalSincronizado++;
+        await _localDataSource.marcarErroSincronizacao(idLocal);
       }
     }
 
@@ -86,5 +125,20 @@ class ViagemRepository {
       'Sincronizacao finalizada. Total=$totalSincronizado',
     );
     return totalSincronizado;
+  }
+
+  Future<int> sincronizarComApi() async {
+    AppLogger.info('REPOSITORY', 'Iniciando sincronizacao completa com API.');
+    final enviados = await sincronizarPendentes();
+    final remotas = await _apiService.listar();
+    final baixados = await _localDataSource.salvarViagensRemotas(remotas);
+    final total = enviados + baixados;
+
+    AppLogger.info(
+      'REPOSITORY',
+      'Sincronizacao completa finalizada. Enviados=$enviados, baixados=$baixados',
+    );
+
+    return total;
   }
 }
