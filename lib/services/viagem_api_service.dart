@@ -17,6 +17,8 @@ class ViagemApiService {
     'API_BASE_URL',
     defaultValue: '',
   );
+  static const _apiBaseUrlPadrao =
+      'https://flutter-registro-de-viagens.vercel.app';
 
   final http.Client _client;
   final String _baseUrl;
@@ -26,11 +28,13 @@ class ViagemApiService {
       return _apiBaseUrlDefinida;
     }
 
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    if (kDebugMode &&
+        !kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:3000';
     }
 
-    return 'http://localhost:3000';
+    return _apiBaseUrlPadrao;
   }
 
   Uri _uri([String path = '']) => Uri.parse('$_baseUrl/viagens$path');
